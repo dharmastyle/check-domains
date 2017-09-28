@@ -1,0 +1,35 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Ping-o-matic v2
+ *
+ * @author Dharma
+ *
+ * Given a csv domains list `domains.csv` in the same path, this script outputs the IP (v4) address associated.
+ * The output is redirected to STDOUT with php:print
+ *
+ * Usage: `$~ php -f get-ip-from-domain.php`
+ *
+ */
+
+// Get csv file as parameter or use default
+$csv = isset($argv[1]) ? $argv[1] : 'list.csv';
+$rows = array_map('str_getcsv', file(sprintf('%s/%s', __DIR__, $csv)));
+
+$domains = [];
+$max = 0;
+
+foreach ($rows as $row) {
+	$domains[] = $row[0];
+	$max = max($max, strlen($row[0]));
+}
+
+foreach ($domains as $num => $domain) {
+	printf('[%02d] ', $num+1);
+    $result = exec(sprintf('host -t a %s', $domain));
+    preg_match('/(?:[0-9]{1,3}\.){3}[0-9]{1,3}/', $result, $matches);
+    $ip = count($matches) ? $matches[0] : '';
+    printf("%-{$max}s", $domain);
+    printf(' → %s', $ip);
+    print("\n");
+}
